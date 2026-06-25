@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS site_content (
 
 -- ============================================================
 -- SEED: Default admin user
--- Login: admin@sse.ng / Admin@12345
+-- Login: admin@sseng.org / Admin@12345
 -- ============================================================
 
 INSERT INTO users (
@@ -224,7 +224,7 @@ INSERT INTO users (
   specialty,
   email_verified_at
 ) VALUES (
-  'admin@sse.ng',
+  'admin@sseng.org',
   '$2b$12$T8JtLCpeWEeJY5QCBm.5zOTrx6kLoYG69c.bKLnM/NT5kJjd9C.Au',
   'ADMIN',
   'SSE',
@@ -237,6 +237,7 @@ INSERT INTO users (
   CURRENT_TIMESTAMP
 )
 ON DUPLICATE KEY UPDATE
+  email = VALUES(email),
   password_hash = VALUES(password_hash),
   role = 'ADMIN',
   first_name = VALUES(first_name),
