@@ -3,6 +3,17 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from './queries/users';
 
+const authUrl = process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+const authSecret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'sse-default-nextauth-secret-change-me';
+
+if (!process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = authUrl;
+}
+
+if (!process.env.NEXTAUTH_SECRET) {
+  process.env.NEXTAUTH_SECRET = authSecret;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -69,5 +80,5 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
 };
