@@ -1,0 +1,194 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import styles from '../admin.module.css';
+import { formatDate } from '@/lib/utils';
+
+export default function AdminMembersPage() {
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => { fetchMembers(); }, []);
+
+  const fetchMembers = async () => {
+    try {
+      const res = await fetch('/api/members');
+      setMembers(await res.json());
+    } catch {}
+    setLoading(false);
+  };
+
+  const updateMember = async (id: number, updates: any) => {
+    setActionLoading(id);
+    try {
+      const res = await fetch('/api/members', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...updates }),
+      });
+      if (res.ok) {
+        setMessage('Member updated successfully.');
+        fetchMembers();
+      }
+    } catch {}
+    setActionLoading(null);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const deleteMember = async (id: number, name: string) => {
+    if (!confirm(`Are you sure you want to delete member "${name}"? This action cannot be undone.`)) return;
+    setActionLoading(id);
+    try {
+      const res = await fetch(`/api/members?id=${id}`, { method: 'DELETE' });
+      if (res.ok) { setMessage('Member deleted.'); fetchMembers(); }
+    } catch {}
+    setActionLoading(null);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const filtered = members.filter(m => {
+    const matchesSearch =
+      `${m.first_name} ${m.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+      m.email.toLowerCase().includes(search.toLowerCase()) ||
+      (m.membership_number || '').toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = filterStatus === 'ALL' || m.membership_status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  return (
+    <div>
+      <div className={styles.topbar}>
+        <span className={styles.topbarTitle}>Member Management</span>
+        <div className={styles.topbarActions}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--gray-mid)' }}>
+            {members.length} total members
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.adminBody}>
+        <div className={styles.pageHeader}>
+          <div>
+            <div className={styles.pageHeaderTitle}>All Members</div>
+            <div className={styles.pageHeaderSub}>Approve, activate, suspend, or remove member accounts.</div>
+          </div>
+        </div>
+
+        {message && <div className="alert alert-success" style={{ marginBottom: '20px' }}>{message}</div>}
+
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Search name, email or ID..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="form-control"
+            style={{ flex: 1, minWidth: '240px', maxWidth: '380px', padding: '9px 14px', fontSize: '0.88rem' }}
+          />
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="form-control"
+            style={{ width: '180px', padding: '9px 14px', fontSize: '0.88rem' }}
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="ACTIVE">Active</option>
+            <option value="SUSPENDED">Suspended</option>
+            <option value="EXPIRED">Expired</option>
+          </select>
+        </div>
+
+        <div className={styles.tableCard}>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Membership ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--gray-mid)' }}>Loading members...</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--gray-mid)' }}>No members found.</td></tr>
+                ) : filtered.map((m: any) => (
+                  <tr key={m.id}>
+                    <td>
+                      <div style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '0.88rem' }}>
+                        {m.first_name} {m.last_name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-mid)' }}>{m.email}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--accent)', fontWeight: '500' }}>{m.role}</div>
+                    </td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+                      {m.membership_number || '—'}
+                    </td>
+                    <td>
+                      <span className="badge badge-secondary" style={{ fontSize: '0.68rem' }}>
+                        {m.membership_type || 'ASSOCIATE'}
+                      </span>
+                    </td>
+                    <td>
+                      <select
+                        value={m.membership_status}
+                        onChange={e => updateMember(m.id, { membership_status: e.target.value })}
+                        disabled={actionLoading === m.id}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '0.78rem',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--gray-border)',
+                          backgroundColor: m.membership_status === 'ACTIVE' ? '#ECFDF5' : m.membership_status === 'PENDING' ? '#FFFBEB' : '#FEF2F2',
+                          color: m.membership_status === 'ACTIVE' ? '#065F46' : m.membership_status === 'PENDING' ? '#92400E' : '#991B1B',
+                          fontWeight: '600',
+                        }}
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="SUSPENDED">Suspended</option>
+                        <option value="EXPIRED">Expired</option>
+                      </select>
+                    </td>
+                    <td style={{ fontSize: '0.78rem', color: 'var(--gray-mid)' }}>
+                      {formatDate(m.created_at)}
+                    </td>
+                    <td>
+                      <div className={styles.actionBtns}>
+                        <button
+                          onClick={() => updateMember(m.id, { role: m.role === 'ADMIN' ? 'MEMBER' : 'ADMIN' })}
+                          disabled={actionLoading === m.id}
+                          className={`${styles.btnAction} ${styles.btnEdit}`}
+                          title="Toggle Admin role"
+                        >
+                          {m.role === 'ADMIN' ? '↓ Demote' : '↑ Admin'}
+                        </button>
+                        <button
+                          onClick={() => deleteMember(m.id, `${m.first_name} ${m.last_name}`)}
+                          disabled={actionLoading === m.id}
+                          className={`${styles.btnAction} ${styles.btnDanger}`}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
