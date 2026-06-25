@@ -1,4 +1,4 @@
-import { NextAuthOptions } from 'next-auth';
+import type { NextAuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from './queries/users';
@@ -32,6 +32,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error('No user found with this email.');
         }
 
+        if (!user.id) {
+          throw new Error('User account is missing an id.');
+        }
+
         if (user.membership_status === 'SUSPENDED') {
           throw new Error('Your account has been suspended. Please contact admin.');
         }
@@ -42,18 +46,18 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id?.toString(),
+          id: user.id.toString(),
           email: user.email,
           name: `${user.first_name} ${user.last_name}`,
           role: user.role,
           membership_number: user.membership_number,
           membership_status: user.membership_status,
-        } as any;
+        } satisfies User;
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -62,7 +66,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;

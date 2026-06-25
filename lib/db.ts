@@ -2,14 +2,34 @@ import mysql from 'mysql2/promise';
 
 let pool: mysql.Pool;
 
+type DefaultQueryResult = mysql.ResultSetHeader & Array<Record<string, number>>;
+type ExecuteParams = Parameters<mysql.Pool['execute']>[1];
+
+function shouldUseSsl(host: string): boolean {
+  const explicit = process.env.DATABASE_SSL;
+  if (explicit === 'true') return true;
+  if (explicit === 'false') return false;
+
+  return !['localhost', '127.0.0.1', '::1'].includes(host);
+}
+
 export function getPool(): mysql.Pool {
   if (!pool) {
+    const host = process.env.DATABASE_HOST || '127.0.0.1';
+    const ssl = shouldUseSsl(host)
+      ? {
+          minVersion: 'TLSv1.2',
+          rejectUnauthorized: true,
+        }
+      : undefined;
+
     pool = mysql.createPool({
-      host: process.env.DATABASE_HOST || '127.0.0.1',
+      host,
       port: parseInt(process.env.DATABASE_PORT || '3306', 10),
       user: process.env.DATABASE_USER || 'root',
       password: process.env.DATABASE_PASSWORD || '',
       database: process.env.DATABASE_NAME || 'sse_db',
+      ssl,
       waitForConnections: true,
       connectionLimit: 10,
       maxIdle: 10, // max idle connections, the default is the same as `connectionLimit`
@@ -22,8 +42,14 @@ export function getPool(): mysql.Pool {
   return pool;
 }
 
-export async function query<T = any>(sql: string, params?: any[]): Promise<T> {
+export async function query<T = DefaultQueryResult>(
+  sql: string,
+  params?: unknown[] | Record<string, unknown>
+): Promise<T> {
   const dbPool = getPool();
-  const [rows] = await dbPool.execute(sql, params);
+  const values = Array.isArray(params)
+    ? params.map((value) => (value === undefined ? null : value))
+    : params;
+  const [rows] = await dbPool.execute(sql, values as ExecuteParams);
   return rows as T;
 }
