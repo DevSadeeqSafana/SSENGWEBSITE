@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { canManageContent } from '@/lib/authz';
 import { subscribeNewsletter, unsubscribeNewsletter, getAllNewsletterSubscribers } from '@/lib/queries/interactions';
 
 export async function GET(req: Request) {
   // Admin listing
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'EDITOR')) {
+    if (!session || !canManageContent(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const subscribers = await getAllNewsletterSubscribers();

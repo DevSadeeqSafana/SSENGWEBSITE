@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { canManageContent } from '@/lib/authz';
 import { getAllSiteContent, updateSiteContent } from '@/lib/queries/content';
 
 export async function GET() {
@@ -15,7 +16,7 @@ export async function GET() {
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'EDITOR')) {
+    if (!session || !canManageContent(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

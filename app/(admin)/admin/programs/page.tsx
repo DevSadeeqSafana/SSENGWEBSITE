@@ -2,17 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from '../admin.module.css';
+import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
 
 const DEFAULT_FORM = { title: '', description: '', content: '', program_type: 'TRAINING', format: 'ONLINE', status: 'ACTIVE', duration: '', is_free: true, price: '', registration_url: '', featured_image_url: '', display_order: '0' };
 
 export default function AdminProgramsPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [programs, setPrograms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<any>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   useEffect(() => { fetch('/api/programs').then(r => r.json()).then(setPrograms).catch(() => {}).finally(() => setLoading(false)); }, []);
 
@@ -31,16 +33,33 @@ export default function AdminProgramsPage() {
       const method = editing ? 'PUT' : 'POST';
       const body = editing ? { id: editing.id, ...payload } : payload;
       const res = await fetch('/api/programs', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) { setMessage(editing ? 'Updated!' : 'Created!'); setShowForm(false); refetch(); }
-      else { const d = await res.json(); setMessage(d.error || 'Save failed.'); }
-    } catch { setMessage('Save failed.'); }
-    setSaving(false); setTimeout(() => setMessage(''), 4000);
+      if (res.ok) { toast.success(editing ? 'Program updated.' : 'Program created.'); setShowForm(false); refetch(); }
+      else { const d = await res.json(); toast.error(d.error || 'Save failed.'); }
+    } catch { toast.error('Save failed.'); }
+    setSaving(false);
   };
 
   const deleteProgram = async (id: number, title: string) => {
-    if (!confirm(`Delete "${title}"?`)) return;
-    await fetch(`/api/programs?id=${id}`, { method: 'DELETE' });
-    refetch();
+    const confirmed = await confirm({
+      title: 'Delete program',
+      message: `Delete "${title}"?`,
+      confirmText: 'Delete',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/programs?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('Program deleted.');
+        refetch();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Delete failed.');
+      }
+    } catch {
+      toast.error('Delete failed.');
+    }
   };
 
   const sf = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
@@ -55,8 +74,6 @@ export default function AdminProgramsPage() {
       </div>
 
       <div className={styles.adminBody}>
-        {message && <div className={`alert ${message.includes('failed') ? 'alert-danger' : 'alert-success'}`} style={{ marginBottom: '20px' }}>{message}</div>}
-
         {showForm && (
           <div className={styles.formCard} style={{ marginBottom: '28px' }}>
             <h3 style={{ color: 'var(--primary)', fontWeight: '700', marginBottom: '20px', fontSize: '1.1rem' }}>{editing ? 'Edit Program' : 'New Program'}</h3>

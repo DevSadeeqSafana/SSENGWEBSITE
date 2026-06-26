@@ -10,7 +10,43 @@ export interface SiteContent {
   updated_at?: string;
 }
 
+const defaultSiteContent: Pick<SiteContent, 'section_key' | 'label' | 'content_type' | 'content_value'>[] = [
+  {
+    section_key: 'hero_image_1',
+    label: 'Hero: Slide Image 1 URL',
+    content_type: 'IMAGE_URL',
+    content_value: '/images/hero_slide_1.png',
+  },
+  {
+    section_key: 'hero_image_2',
+    label: 'Hero: Slide Image 2 URL',
+    content_type: 'IMAGE_URL',
+    content_value: '/images/hero_slide_2.png',
+  },
+  {
+    section_key: 'hero_image_3',
+    label: 'Hero: Slide Image 3 URL',
+    content_type: 'IMAGE_URL',
+    content_value: '/images/hero_slide_3.png',
+  },
+];
+
+async function ensureDefaultSiteContent(): Promise<void> {
+  const sql = `
+    INSERT INTO site_content (section_key, label, content_type, content_value)
+    VALUES (?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE section_key = section_key
+  `;
+
+  await Promise.all(
+    defaultSiteContent.map((item) =>
+      query(sql, [item.section_key, item.label, item.content_type, item.content_value])
+    )
+  );
+}
+
 export async function getAllSiteContent(): Promise<SiteContent[]> {
+  await ensureDefaultSiteContent();
   const sql = 'SELECT * FROM site_content ORDER BY section_key ASC';
   return query<SiteContent[]>(sql);
 }

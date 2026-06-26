@@ -290,3 +290,140 @@
   gap: 20px;
   flex-wrap: wrap;
 }
+
+/* PARTNERS SECTION */
+.partnersSection {
+  padding: 80px 0;
+  border-bottom: 1px solid var(--gray-border);
+  overflow: hidden;
+}
+
+.partnersHeader {
+  max-width: 720px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.partnersKicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.partnersTitle {
+  color: var(--primary);
+  font-size: 2rem;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.partnersText {
+  color: var(--gray-mid);
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.partnersMarquee {
+  width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+
+.partnersTrack {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  gap: 64px;
+  animation: partnersMarquee 28s linear infinite;
+}
+
+.partnersMarquee:hover .partnersTrack {
+  animation-play-state: paused;
+}
+
+.partnerLink {
+  display: block;
+  color: inherit;
+}
+
+.partnerItem {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.partnerLogoBox {
+  height: 122px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.partnerLogo {
+  max-width: 240px;
+  max-height: 112px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.partnerInitials {
+  min-width: 118px;
+  height: 82px;
+  padding: 0 22px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+}
+
+.partnerName {
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 1.12rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+@keyframes partnersMarquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 32px));
+  }
+}
+
+@media (max-width: 640px) {
+  .partnersTrack {
+    gap: 42px;
+    animation-duration: 22s;
+  }
+
+  .partnerItem {
+    min-width: 180px;
+  }
+
+  .partnerLogoBox {
+    height: 104px;
+  }
+
+  .partnerLogo {
+    max-width: 200px;
+    max-height: 94px;
+  }
+}

@@ -2,19 +2,19 @@
 
 import React, { useState } from 'react';
 import styles from '../layout/layout.module.css';
+import { useToast } from '@/components/ui/FeedbackProvider';
 
 export default function NewsletterForm() {
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [name, setName] = useState(''); // Optional name field
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
     setStatus('loading');
-    setMessage('');
 
     try {
       const response = await fetch('/api/newsletter', {
@@ -29,49 +29,38 @@ export default function NewsletterForm() {
         setStatus('success');
         setEmail('');
         setName('');
-        setMessage('Thank you for subscribing to our newsletter!');
+        toast.success('Thank you for subscribing to our newsletter!');
       } else {
         setStatus('error');
-        setMessage(data.error || 'Something went wrong. Please try again.');
+        toast.error(data.error || 'Something went wrong. Please try again.');
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
-      setMessage('Failed to send request. Please check your network connection.');
+      toast.error('Failed to send request. Please check your network connection.');
     }
   };
 
   return (
     <div>
-      {status === 'success' ? (
-        <div style={{ color: 'var(--success)', fontSize: '0.9rem', marginTop: '10px', fontWeight: '500' }}>
-          {message}
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className={styles.footerNewsletterForm}>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={styles.footerNewsletterInput}
-            required
-            disabled={status === 'loading'}
-            aria-label="Email address"
-          />
-          <button
-            type="submit"
-            className={styles.footerNewsletterBtn}
-            disabled={status === 'loading'}
-          >
-            {status === 'loading' ? '...' : 'Join'}
-          </button>
-        </form>
-      )}
-      {status === 'error' && (
-        <div style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '8px' }}>
-          {message}
-        </div>
-      )}
+      <form onSubmit={handleSubmit} className={styles.footerNewsletterForm}>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={styles.footerNewsletterInput}
+          required
+          disabled={status === 'loading'}
+          aria-label="Email address"
+        />
+        <button
+          type="submit"
+          className={styles.footerNewsletterBtn}
+          disabled={status === 'loading'}
+        >
+          {status === 'loading' ? '...' : 'Join'}
+        </button>
+      </form>
     </div>
   );
 }

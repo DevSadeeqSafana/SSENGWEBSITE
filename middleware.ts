@@ -1,14 +1,18 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
+function canAccessAdmin(role?: string | null): boolean {
+  return role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'EDITOR';
+}
+
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    // Admin routes — only ADMIN or EDITOR roles allowed
+    // Admin routes are limited to staff roles.
     if (path.startsWith('/admin')) {
-      if (token?.role !== 'ADMIN' && token?.role !== 'EDITOR') {
+      if (!canAccessAdmin(token?.role as string | undefined)) {
         return NextResponse.redirect(new URL('/portal', req.url));
       }
     }

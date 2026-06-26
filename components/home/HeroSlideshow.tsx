@@ -9,7 +9,7 @@ interface HeroSlideshowProps {
   content: Record<string, string>;
 }
 
-const slideImages = [
+const defaultSlideImages = [
   '/images/hero_slide_1.png',
   '/images/hero_slide_2.png',
   '/images/hero_slide_3.png',
@@ -17,6 +17,11 @@ const slideImages = [
 
 export default function HeroSlideshow({ content }: HeroSlideshowProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const slideImages = [
+    content.hero_image_1 || defaultSlideImages[0],
+    content.hero_image_2 || defaultSlideImages[1],
+    content.hero_image_3 || defaultSlideImages[2],
+  ].filter(Boolean);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -24,7 +29,7 @@ export default function HeroSlideshow({ content }: HeroSlideshowProps) {
     }, 6000); // Rotate slide every 6 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [slideImages.length]);
 
   const headline = content.hero_headline || "Building Nigeria's Digital Future";
   const subheadline = content.hero_subheadline || 'Society of Software Engineers';

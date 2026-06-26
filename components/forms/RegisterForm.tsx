@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { PartyPopper } from 'lucide-react';
+import { useToast } from '@/components/ui/FeedbackProvider';
 
 export default function RegisterForm() {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -15,7 +17,6 @@ export default function RegisterForm() {
     specialty: '',
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
   const [regNum, setRegNum] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -30,7 +31,6 @@ export default function RegisterForm() {
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) return;
 
     setStatus('loading');
-    setMessage('');
 
     try {
       const response = await fetch('/api/register', {
@@ -44,14 +44,14 @@ export default function RegisterForm() {
       if (response.ok) {
         setStatus('success');
         setRegNum(data.membershipNumber);
-        setMessage(data.message || 'Registration successful!');
+        toast.success(data.message || 'Registration successful!');
       } else {
         setStatus('error');
-        setMessage(data.error || 'An error occurred. Please check your details and try again.');
+        toast.error(data.error || 'An error occurred. Please check your details and try again.');
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
-      setMessage('Failed to register. Please check your network connection.');
+      toast.error('Failed to register. Please check your network connection.');
     }
   };
 
@@ -78,7 +78,7 @@ export default function RegisterForm() {
           Registration Submitted!
         </h3>
         <p style={{ color: 'var(--gray-dark)', lineHeight: '1.7', marginBottom: '24px' }}>
-          {message}
+          Your application has been received and is pending review.
         </p>
 
         {regNum && (
@@ -108,12 +108,6 @@ export default function RegisterForm() {
       <p style={{ color: 'var(--gray-mid)', fontSize: '0.88rem', marginBottom: '24px' }}>
         Join the society of software engineering leaders in Nigeria. Fields with * are required.
       </p>
-
-      {status === 'error' && (
-        <div className="alert alert-danger" style={{ marginBottom: '24px' }}>
-          {message}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-2" style={{ gap: '20px', marginBottom: '20px' }}>

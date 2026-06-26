@@ -26,7 +26,7 @@
 }
 
 .sidebarBrand {
-  padding: 24px;
+  padding: 20px 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
@@ -40,14 +40,14 @@
 
 .sidebarBrandName {
   font-family: var(--font-heading);
-  font-size: 1.2rem;
+  font-size: 1.08rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   line-height: 1;
 }
 
 .sidebarBrandSub {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--accent-light);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -55,15 +55,15 @@
 
 .sidebarNav {
   flex: 1;
-  padding: 16px 0;
+  padding: 12px 0;
   overflow-y: auto;
 }
 
 .sidebarSection {
-  padding: 12px 20px 4px;
-  font-size: 0.65rem;
+  padding: 10px 20px 4px;
+  font-size: 0.58rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   color: rgba(255, 255, 255, 0.3);
   font-weight: 700;
 }
@@ -71,10 +71,10 @@
 .sidebarLink {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 20px;
+  gap: 10px;
+  padding: 9px 20px;
   color: rgba(255, 255, 255, 0.65);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 500;
   transition: all var(--transition-fast);
   border-left: 3px solid transparent;
@@ -93,9 +93,55 @@
   border-left-color: var(--accent);
 }
 
+.sidebarSubnav {
+  padding: 2px 0 6px;
+}
+
+.sidebarSubLink {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 20px 7px 46px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.76rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  border-left: 3px solid transparent;
+}
+
+.sidebarSubLink:hover {
+  color: var(--white);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebarSubLinkActive {
+  color: var(--white);
+  background-color: rgba(37, 99, 235, 0.16);
+  border-left-color: var(--accent-light);
+}
+
+.sidebarAccordionBtn {
+  width: 100%;
+  background: transparent;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebarChevron {
+  margin-left: auto;
+  transition: transform var(--transition-fast);
+}
+
+.sidebarChevronOpen {
+  transform: rotate(180deg);
+}
+
 .sidebarIcon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
@@ -330,6 +376,270 @@
   min-height: 120px;
   resize: vertical;
   line-height: 1.6;
+}
+
+/* CMS editor */
+.cmsSearch {
+  width: 260px;
+  height: 36px;
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--gray-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  color: var(--gray-mid);
+}
+
+.cmsSearch input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 0.8rem;
+  color: var(--gray-dark);
+}
+
+.cmsHero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  background-color: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.cmsHeroIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(37, 99, 235, 0.08);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmsKicker {
+  font-size: 0.64rem;
+  color: var(--gray-mid);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.cmsTitle {
+  margin-top: 2px;
+  font-size: 1.12rem;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.cmsDescription {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--gray-mid);
+}
+
+.cmsCount {
+  min-width: 58px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background-color: var(--gray-light);
+  color: var(--primary);
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 800;
+  text-align: center;
+}
+
+.cmsCount span {
+  display: block;
+  margin-top: 3px;
+  color: var(--gray-mid);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.cmsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.cmsFieldCard {
+  background-color: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.cmsFieldWide {
+  grid-column: 1 / -1;
+}
+
+.cmsFieldHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.cmsFieldMeta {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cmsFieldIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(15, 23, 42, 0.05);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cmsFieldLabel {
+  display: block;
+  color: var(--primary);
+  font-size: 0.82rem;
+  line-height: 1.25;
+  font-weight: 750;
+}
+
+.cmsFieldDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+.cmsFieldDetails code {
+  background-color: var(--gray-light);
+  color: var(--gray-mid);
+  border: 1px solid var(--gray-border);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 0.64rem;
+}
+
+.cmsFieldDetails span {
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.cmsInput,
+.cmsTextarea {
+  width: 100%;
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-sm);
+  background-color: #fff;
+  color: var(--gray-dark);
+  font-size: 0.8rem;
+  outline: 0;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.cmsInput {
+  height: 38px;
+  padding: 0 11px;
+}
+
+.cmsTextarea {
+  min-height: 112px;
+  padding: 10px 11px;
+  resize: vertical;
+  line-height: 1.55;
+  font-family: var(--font-mono);
+}
+
+.cmsInput:focus,
+.cmsTextarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.cmsSaveBtn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background-color: rgba(37, 99, 235, 0.08);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.cmsSaveBtn:hover {
+  background-color: var(--accent);
+  color: var(--white);
+}
+
+.cmsSaveBtn:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.cmsSaveBtnSaved {
+  border-color: rgba(16, 185, 129, 0.24);
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.cmsImagePreview {
+  margin-top: 10px;
+  height: 92px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-border);
+  background-size: cover;
+  background-position: center;
+  background-color: var(--gray-light);
+}
+
+.cmsSpin {
+  animation: cmsSpin 0.8s linear infinite;
+}
+
+@keyframes cmsSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 980px) {
+  .cmsGrid,
+  .cmsHero {
+    grid-template-columns: 1fr;
+  }
+
+  .cmsCount {
+    width: fit-content;
+  }
 }
 
 /* Action buttons in table rows */

@@ -4,16 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Link as LinkIcon, Lock, Mail, Save, User } from 'lucide-react';
 import styles from '../portal.module.css';
+import { useToast } from '@/components/ui/FeedbackProvider';
 
 export default function ProfilePage() {
+  const toast = useToast();
   const { data: session, update } = useSession();
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', state_of_origin: '', institution: '', discipline: '', bio: '', linkedin_url: '', twitter_url: '', github_url: '' });
   const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', confirm_password: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPw, setSavingPw] = useState(false);
-  const [message, setMessage] = useState('');
-  const [pwMessage, setPwMessage] = useState('');
   const [tab, setTab] = useState<'profile' | 'security'>('profile');
 
   useEffect(() => {
@@ -51,25 +51,24 @@ export default function ProfilePage() {
         body: JSON.stringify(form),
       });
       if (res.ok) {
-        setMessage('Profile updated successfully!');
+        toast.success('Profile updated successfully.');
         await update({ name: `${form.first_name} ${form.last_name}` });
       } else {
         const d = await res.json();
-        setMessage(d.error || 'Update failed.');
+        toast.error(d.error || 'Update failed.');
       }
-    } catch { setMessage('Update failed. Please try again.'); }
+    } catch { toast.error('Update failed. Please try again.'); }
     setSaving(false);
-    setTimeout(() => setMessage(''), 4000);
   };
 
   const handlePwChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (pwForm.new_password !== pwForm.confirm_password) {
-      setPwMessage('New passwords do not match.');
+      toast.error('New passwords do not match.');
       return;
     }
     if (pwForm.new_password.length < 8) {
-      setPwMessage('Password must be at least 8 characters.');
+      toast.error('Password must be at least 8 characters.');
       return;
     }
     setSavingPw(true);
@@ -79,11 +78,10 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ current_password: pwForm.current_password, new_password: pwForm.new_password }),
       });
-      if (res.ok) { setPwMessage('Password changed successfully!'); setPwForm({ current_password: '', new_password: '', confirm_password: '' }); }
-      else { const d = await res.json(); setPwMessage(d.error || 'Password change failed.'); }
-    } catch { setPwMessage('Password change failed.'); }
+      if (res.ok) { toast.success('Password changed successfully.'); setPwForm({ current_password: '', new_password: '', confirm_password: '' }); }
+      else { const d = await res.json(); toast.error(d.error || 'Password change failed.'); }
+    } catch { toast.error('Password change failed.'); }
     setSavingPw(false);
-    setTimeout(() => setPwMessage(''), 5000);
   };
 
   const sf = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -126,7 +124,6 @@ export default function ProfilePage() {
         {tab === 'profile' && (
           <div className={styles.infoCard}>
             <div className={styles.infoCardTitle}>Personal & Professional Information</div>
-            {message && <div className={`alert ${message.includes('success') ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '20px' }}>{message}</div>}
             {loading ? (
               <div style={{ textAlign: 'center', padding: '40px', color: 'var(--gray-mid)' }}>Loading profile...</div>
             ) : (
@@ -205,7 +202,6 @@ export default function ProfilePage() {
               <Lock style={{ width: '18px', height: '18px' }} />
               Change Password
             </div>
-            {pwMessage && <div className={`alert ${pwMessage.includes('success') ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '20px' }}>{pwMessage}</div>}
             <form onSubmit={handlePwChange}>
               <div className="form-group">
                 <label className="form-label">Current Password *</label>

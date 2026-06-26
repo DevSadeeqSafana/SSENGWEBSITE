@@ -3,17 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../admin.module.css';
 import { formatDate } from '@/lib/utils';
+import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
 
 const DEFAULT_FORM = { title: '', description: '', content: '', event_type: 'WEBINAR', status: 'UPCOMING', location: '', is_virtual: false, is_free: true, ticket_price: '', start_date: '', end_date: '', registration_deadline: '', registration_url: '', featured_image_url: '', max_attendees: '' };
 
 export default function AdminEventsPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<any>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   useEffect(() => { fetchEvents(); }, []);
 
@@ -44,16 +46,33 @@ export default function AdminEventsPage() {
       const method = editing ? 'PUT' : 'POST';
       const body = editing ? { id: editing.id, ...payload } : payload;
       const res = await fetch('/api/events', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) { setMessage(editing ? 'Event updated!' : 'Event created!'); setShowForm(false); fetchEvents(); }
-      else { const d = await res.json(); setMessage(d.error || 'Save failed.'); }
-    } catch { setMessage('Save failed.'); }
-    setSaving(false); setTimeout(() => setMessage(''), 4000);
+      if (res.ok) { toast.success(editing ? 'Event updated.' : 'Event created.'); setShowForm(false); fetchEvents(); }
+      else { const d = await res.json(); toast.error(d.error || 'Save failed.'); }
+    } catch { toast.error('Save failed.'); }
+    setSaving(false);
   };
 
   const deleteEvent = async (id: number, title: string) => {
-    if (!confirm(`Delete event "${title}"?`)) return;
-    await fetch(`/api/events?id=${id}`, { method: 'DELETE' });
-    fetchEvents();
+    const confirmed = await confirm({
+      title: 'Delete event',
+      message: `Delete event "${title}"?`,
+      confirmText: 'Delete',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/events?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('Event deleted.');
+        fetchEvents();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Delete failed.');
+      }
+    } catch {
+      toast.error('Delete failed.');
+    }
   };
 
   const setField = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
@@ -68,8 +87,6 @@ export default function AdminEventsPage() {
       </div>
 
       <div className={styles.adminBody}>
-        {message && <div className={`alert ${message.includes('failed') ? 'alert-danger' : 'alert-success'}`} style={{ marginBottom: '20px' }}>{message}</div>}
-
         {showForm && (
           <div className={styles.formCard} style={{ marginBottom: '28px' }}>
             <h3 style={{ color: 'var(--primary)', fontWeight: '700', marginBottom: '20px', fontSize: '1.1rem' }}>{editing ? 'Edit Event' : 'Create New Event'}</h3>

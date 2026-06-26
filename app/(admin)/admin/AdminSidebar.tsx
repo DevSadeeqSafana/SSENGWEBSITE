@@ -1,14 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   CalendarDays,
+  ChevronDown,
+  Circle,
   ExternalLink,
   GraduationCap,
+  Handshake,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -26,6 +29,7 @@ interface NavLink {
   label: string;
   Icon: LucideIcon;
   exact?: boolean;
+  subLinks?: Omit<NavLink, 'subLinks'>[];
 }
 
 interface NavGroup {
@@ -38,6 +42,20 @@ const navItems: NavGroup[] = [
     section: 'Overview',
     links: [
       { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard, exact: true },
+      {
+        href: '/admin/content',
+        label: 'Site Content (CMS)',
+        Icon: Settings,
+        subLinks: [
+          { href: '/admin/content/hero', label: 'Hero Section', Icon: Circle },
+          { href: '/admin/content/mission-strip', label: 'Vision & Mission', Icon: Circle },
+          { href: '/admin/content/stats', label: 'Stats Counter', Icon: Circle },
+          { href: '/admin/content/cta', label: 'Call To Action', Icon: Circle },
+          { href: '/admin/content/about', label: 'About Page', Icon: Circle },
+          { href: '/admin/content/footer', label: 'Footer Contact', Icon: Circle },
+          { href: '/admin/content/social', label: 'Social Links', Icon: Circle },
+        ],
+      },
     ],
   },
   {
@@ -46,6 +64,7 @@ const navItems: NavGroup[] = [
       { href: '/admin/news', label: 'News & Blog', Icon: Newspaper },
       { href: '/admin/events', label: 'Events', Icon: CalendarDays },
       { href: '/admin/programs', label: 'Programs', Icon: GraduationCap },
+      { href: '/admin/partners', label: 'Partners', Icon: Handshake },
       { href: '/admin/executives', label: 'Leadership', Icon: UserRound },
     ],
   },
@@ -57,17 +76,14 @@ const navItems: NavGroup[] = [
       { href: '/admin/newsletter', label: 'Newsletter', Icon: Mail },
     ],
   },
-  {
-    section: 'Settings',
-    links: [
-      { href: '/admin/content', label: 'Site Content (CMS)', Icon: Settings },
-    ],
-  },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    '/admin/content': pathname.startsWith('/admin/content'),
+  });
 
   const initials = session?.user?.name
     ? session.user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -93,13 +109,37 @@ export default function AdminSidebar() {
         {navItems.map((group) => (
           <div key={group.section}>
             <div className={styles.sidebarSection}>{group.section}</div>
-            {group.links.map((link) => (
-              <SidebarLink
-                key={link.href}
-                link={link}
-                active={link.exact ? pathname === link.href : pathname.startsWith(link.href)}
-              />
-            ))}
+            {group.links.map((link) => {
+              const active = link.exact ? pathname === link.href : pathname.startsWith(link.href);
+              const expanded = link.subLinks ? (openGroups[link.href] ?? active) : false;
+
+              return (
+                <div key={link.href}>
+                  <SidebarLink
+                    link={link}
+                    active={active}
+                    expanded={expanded}
+                    onToggle={
+                      link.subLinks
+                        ? () => setOpenGroups((prev) => ({ ...prev, [link.href]: !(prev[link.href] ?? active) }))
+                        : undefined
+                    }
+                  />
+                  {link.subLinks && expanded && (
+                    <div className={styles.sidebarSubnav}>
+                      {link.subLinks.map((subLink) => (
+                        <SidebarLink
+                          key={subLink.href}
+                          link={subLink}
+                          active={pathname === subLink.href}
+                          subItem
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
       </nav>
@@ -156,15 +196,44 @@ export default function AdminSidebar() {
   );
 }
 
-function SidebarLink({ link, active }: { link: NavLink; active: boolean }) {
+function SidebarLink({
+  link,
+  active,
+  expanded = false,
+  onToggle,
+  subItem = false,
+}: {
+  link: NavLink;
+  active: boolean;
+  expanded?: boolean;
+  onToggle?: () => void;
+  subItem?: boolean;
+}) {
   const Icon = link.Icon;
+  const className = subItem
+    ? `${styles.sidebarSubLink} ${active ? styles.sidebarSubLinkActive : ''}`
+    : `${styles.sidebarLink} ${active ? styles.sidebarLinkActive : ''}`;
+
+  if (onToggle) {
+    return (
+      <button type="button" className={`${className} ${styles.sidebarAccordionBtn}`} onClick={onToggle}>
+        <Icon size={16} aria-hidden="true" />
+        <span>{link.label}</span>
+        <ChevronDown
+          size={14}
+          aria-hidden="true"
+          className={`${styles.sidebarChevron} ${expanded ? styles.sidebarChevronOpen : ''}`}
+        />
+      </button>
+    );
+  }
 
   return (
     <Link
       href={link.href}
-      className={`${styles.sidebarLink} ${active ? styles.sidebarLinkActive : ''}`}
+      className={className}
     >
-      <Icon size={18} aria-hidden="true" />
+      <Icon size={subItem ? 7 : 16} aria-hidden="true" />
       <span>{link.label}</span>
     </Link>
   );

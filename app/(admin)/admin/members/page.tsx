@@ -1,16 +1,40 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import styles from '../admin.module.css';
+import { canManageAdmins } from '@/lib/authz';
 import { formatDate } from '@/lib/utils';
+import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
+
+type MemberRole = 'SUPER_ADMIN' | 'ADMIN' | 'EDITOR' | 'MEMBER';
+type MembershipStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED';
+
+interface Member {
+  id: number;
+  email: string;
+  role: MemberRole;
+  first_name: string;
+  last_name: string;
+  membership_number?: string | null;
+  membership_type?: string | null;
+  membership_status: MembershipStatus;
+  created_at: string;
+}
+
+type MemberUpdates = Partial<Pick<Member, 'role' | 'membership_status' | 'membership_type' | 'membership_number'>>;
 
 export default function AdminMembersPage() {
-  const [members, setMembers] = useState<any[]>([]);
+  const toast = useToast();
+  const confirm = useConfirm();
+  const { data: session } = useSession();
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const [message, setMessage] = useState('');
+
+  const currentUserCanManageAdmins = canManageAdmins(session?.user?.role);
 
   useEffect(() => { fetchMembers(); }, []);
 
@@ -22,7 +46,7 @@ export default function AdminMembersPage() {
     setLoading(false);
   };
 
-  const updateMember = async (id: number, updates: any) => {
+  const updateMember = async (id: number, updates: MemberUpdates) => {
     setActionLoading(id);
     try {
       const res = await fetch('/api/members', {
@@ -31,23 +55,41 @@ export default function AdminMembersPage() {
         body: JSON.stringify({ id, ...updates }),
       });
       if (res.ok) {
-        setMessage('Member updated successfully.');
+        toast.success('Member updated successfully.');
         fetchMembers();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Failed to update member.');
       }
-    } catch {}
+    } catch {
+      toast.error('Failed to update member.');
+    }
     setActionLoading(null);
-    setTimeout(() => setMessage(''), 3000);
   };
 
   const deleteMember = async (id: number, name: string) => {
-    if (!confirm(`Are you sure you want to delete member "${name}"? This action cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: 'Delete member',
+      message: `Are you sure you want to delete member "${name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
     setActionLoading(id);
     try {
       const res = await fetch(`/api/members?id=${id}`, { method: 'DELETE' });
-      if (res.ok) { setMessage('Member deleted.'); fetchMembers(); }
-    } catch {}
+      if (res.ok) {
+        toast.success('Member deleted.');
+        fetchMembers();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Failed to delete member.');
+      }
+    } catch {
+      toast.error('Failed to delete member.');
+    }
     setActionLoading(null);
-    setTimeout(() => setMessage(''), 3000);
   };
 
   const filtered = members.filter(m => {
@@ -77,8 +119,6 @@ export default function AdminMembersPage() {
             <div className={styles.pageHeaderSub}>Approve, activate, suspend, or remove member accounts.</div>
           </div>
         </div>
-
-        {message && <div className="alert alert-success" style={{ marginBottom: '20px' }}>{message}</div>}
 
         {/* Filters */}
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -122,7 +162,7 @@ export default function AdminMembersPage() {
                   <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--gray-mid)' }}>Loading members...</td></tr>
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--gray-mid)' }}>No members found.</td></tr>
-                ) : filtered.map((m: any) => (
+                ) : filtered.map((m) => (
                   <tr key={m.id}>
                     <td>
                       <div style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '0.88rem' }}>
@@ -142,7 +182,7 @@ export default function AdminMembersPage() {
                     <td>
                       <select
                         value={m.membership_status}
-                        onChange={e => updateMember(m.id, { membership_status: e.target.value })}
+                        onChange={e => updateMember(m.id, { membership_status: e.target.value as MembershipStatus })}
                         disabled={actionLoading === m.id}
                         style={{
                           padding: '4px 8px',
@@ -165,18 +205,41 @@ export default function AdminMembersPage() {
                     </td>
                     <td>
                       <div className={styles.actionBtns}>
-                        <button
-                          onClick={() => updateMember(m.id, { role: m.role === 'ADMIN' ? 'MEMBER' : 'ADMIN' })}
-                          disabled={actionLoading === m.id}
-                          className={`${styles.btnAction} ${styles.btnEdit}`}
-                          title="Toggle Admin role"
+                        <select
+                          value={m.role}
+                          onChange={(e) => updateMember(m.id, { role: e.target.value as MemberRole })}
+                          disabled={
+                            actionLoading === m.id ||
+                            !currentUserCanManageAdmins ||
+                            m.role === 'SUPER_ADMIN'
+                          }
+                          title={
+                            m.role === 'SUPER_ADMIN'
+                              ? 'The super admin role cannot be changed here.'
+                              : currentUserCanManageAdmins
+                                ? 'Change member role'
+                                : 'Only the super admin can change roles.'
+                          }
+                          style={{
+                            padding: '5px 8px',
+                            fontSize: '0.78rem',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--gray-border)',
+                            backgroundColor: '#fff',
+                            color: 'var(--primary)',
+                            fontWeight: '600',
+                          }}
                         >
-                          {m.role === 'ADMIN' ? '↓ Demote' : '↑ Admin'}
-                        </button>
+                          {m.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
+                          <option value="MEMBER">Member</option>
+                          <option value="EDITOR">Editor</option>
+                          <option value="ADMIN">Admin</option>
+                        </select>
                         <button
                           onClick={() => deleteMember(m.id, `${m.first_name} ${m.last_name}`)}
-                          disabled={actionLoading === m.id}
+                          disabled={actionLoading === m.id || m.role === 'SUPER_ADMIN'}
                           className={`${styles.btnAction} ${styles.btnDanger}`}
+                          title={m.role === 'SUPER_ADMIN' ? 'The super admin account cannot be deleted.' : 'Delete member'}
                         >
                           Delete
                         </button>

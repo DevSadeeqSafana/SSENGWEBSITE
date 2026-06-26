@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { CalendarDays, ExternalLink, GraduationCap, Home, Newspaper, Settings, User } from 'lucide-react';
+import { canAccessAdmin } from '@/lib/authz';
 import styles from './portal.module.css';
 
 const navLinks = [
@@ -53,7 +54,7 @@ export default function PortalSidebar() {
           );
         })}
 
-        {session?.user?.role === 'ADMIN' && (
+        {canAccessAdmin(session?.user?.role) && (
           <Link href="/admin" className={styles.sidebarLink} style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
             <Settings style={{ width: '16px', height: '16px' }} />
             <span>Admin Panel</span>

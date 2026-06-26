@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useToast } from '@/components/ui/FeedbackProvider';
 
 export default function ContactForm() {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,7 +13,6 @@ export default function ContactForm() {
     message: '',
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [feedback, setFeedback] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -25,7 +26,6 @@ export default function ContactForm() {
     if (!formData.name || !formData.email || !formData.message) return;
 
     setStatus('loading');
-    setFeedback('');
 
     try {
       const response = await fetch('/api/contact', {
@@ -39,14 +39,14 @@ export default function ContactForm() {
       if (response.ok) {
         setStatus('success');
         setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-        setFeedback('Thank you! Your message has been sent successfully. We will get back to you shortly.');
+        toast.success('Thank you! Your message has been sent successfully. We will get back to you shortly.');
       } else {
         setStatus('error');
-        setFeedback(data.error || 'Something went wrong. Please check your inputs and try again.');
+        toast.error(data.error || 'Something went wrong. Please check your inputs and try again.');
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
-      setFeedback('Failed to submit form. Please check your connection.');
+      toast.error('Failed to submit form. Please check your connection.');
     }
   };
 
@@ -55,18 +55,6 @@ export default function ContactForm() {
       <h3 style={{ fontSize: '1.4rem', color: 'var(--primary)', fontWeight: '700', marginBottom: '24px' }}>
         Send Us a Message
       </h3>
-
-      {status === 'success' && (
-        <div className="alert alert-success" style={{ marginBottom: '24px' }}>
-          {feedback}
-        </div>
-      )}
-
-      {status === 'error' && (
-        <div className="alert alert-danger" style={{ marginBottom: '24px' }}>
-          {feedback}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">

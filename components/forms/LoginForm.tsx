@@ -4,34 +4,33 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { useToast } from '@/components/ui/FeedbackProvider';
 
 export default function LoginForm() {
+  const toast = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
 
   // Handle URL errors or callbacks (e.g. if redirected because of auth failure)
   useEffect(() => {
     const errorParam = searchParams.get('error');
     if (errorParam) {
-      setStatus('error');
       if (errorParam === 'CredentialsSignin') {
-        setMessage('Invalid email or password. Please try again.');
+        toast.error('Invalid email or password. Please try again.');
       } else {
-        setMessage(errorParam);
+        toast.error(errorParam);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
 
     setStatus('loading');
-    setMessage('');
 
     try {
       const result = await signIn('credentials', {
@@ -42,7 +41,7 @@ export default function LoginForm() {
 
       if (result?.error) {
         setStatus('error');
-        setMessage(result.error || 'Authentication failed. Please check your credentials.');
+        toast.error(result.error || 'Authentication failed. Please check your credentials.');
       } else {
         const session = await getSession();
         const redirectPath = session?.user?.role === 'ADMIN' || session?.user?.role === 'EDITOR'
@@ -50,14 +49,14 @@ export default function LoginForm() {
           : '/portal';
 
         setStatus('success');
-        setMessage('Login successful. Redirecting you...');
+        toast.success('Login successful. Redirecting you...');
         // Refresh session and redirect
         router.push(redirectPath);
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
-      setMessage('Failed to log in. Please check your connection.');
+      toast.error('Failed to log in. Please check your connection.');
     }
   };
 
@@ -69,18 +68,6 @@ export default function LoginForm() {
       <p style={{ color: 'var(--gray-mid)', fontSize: '0.88rem', marginBottom: '24px' }}>
         Log in to access your dashboard, profile, and directories.
       </p>
-
-      {status === 'error' && (
-        <div className="alert alert-danger" style={{ marginBottom: '24px' }}>
-          {message}
-        </div>
-      )}
-
-      {status === 'success' && (
-        <div className="alert alert-success" style={{ marginBottom: '24px' }}>
-          {message}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">

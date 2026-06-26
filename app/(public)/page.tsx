@@ -6,11 +6,13 @@ import FeaturedPrograms from '@/components/home/FeaturedPrograms';
 import UpcomingEvents from '@/components/home/UpcomingEvents';
 import LatestNews from '@/components/home/LatestNews';
 import CTASection from '@/components/home/CTASection';
+import PartnersSection from '@/components/home/PartnersSection';
 
 import { getSiteContentMap } from '@/lib/queries/content';
 import { getAllPrograms } from '@/lib/queries/programs';
 import { getAllEvents } from '@/lib/queries/events';
 import { getAllPosts } from '@/lib/queries/posts';
+import { getAllPartners } from '@/lib/queries/partners';
 
 // Set page to dynamic rendering so it pulls fresh database info on load
 export const revalidate = 0;
@@ -20,6 +22,7 @@ export default async function HomePage() {
   let programs: any[] = [];
   let events: any[] = [];
   let posts: any[] = [];
+  let partners: any[] = [];
 
   // Database fetches wrapped in individual try/catch to maintain robustness
   try {
@@ -46,6 +49,12 @@ export default async function HomePage() {
     console.error('Failed to fetch published posts for homepage:', error);
   }
 
+  try {
+    partners = await getAllPartners('ACTIVE');
+  } catch (error) {
+    console.error('Failed to fetch active partners for homepage:', error);
+  }
+
   return (
     <>
       <HeroSlideshow content={content} />
@@ -55,6 +64,7 @@ export default async function HomePage() {
       <UpcomingEvents events={events} />
       <LatestNews posts={posts} />
       <CTASection content={content} />
+      <PartnersSection partners={partners} />
     </>
   );
 }

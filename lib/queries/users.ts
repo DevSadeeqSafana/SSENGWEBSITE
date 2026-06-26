@@ -4,7 +4,7 @@ export interface User {
   id?: number;
   email: string;
   password_hash: string;
-  role: 'ADMIN' | 'EDITOR' | 'MEMBER';
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'EDITOR' | 'MEMBER';
   first_name: string;
   last_name: string;
   phone?: string | null;
@@ -24,19 +24,44 @@ export interface User {
   updated_at?: string;
 }
 
+let userSchemaReady = false;
+
+export function isAdminRole(role?: string | null): boolean {
+  return role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'EDITOR';
+}
+
+export function isSuperAdminRole(role?: string | null): boolean {
+  return role === 'SUPER_ADMIN';
+}
+
+async function ensureUserRoleSchema(): Promise<void> {
+  if (userSchemaReady) return;
+
+  await query(`
+    ALTER TABLE users
+    MODIFY role ENUM('SUPER_ADMIN','ADMIN','EDITOR','MEMBER') NOT NULL DEFAULT 'MEMBER'
+  `);
+  await query("UPDATE users SET role = 'SUPER_ADMIN' WHERE email = 'admin@sseng.org' LIMIT 1");
+  await query("UPDATE users SET role = 'ADMIN' WHERE role = 'SUPER_ADMIN' AND email <> 'admin@sseng.org'");
+  userSchemaReady = true;
+}
+
 export async function getUserByEmail(email: string): Promise<User | null> {
+  await ensureUserRoleSchema();
   const sql = 'SELECT * FROM users WHERE email = ? LIMIT 1';
   const rows = await query<User[]>(sql, [email]);
   return rows.length > 0 ? rows[0] : null;
 }
 
 export async function getUserById(id: number): Promise<User | null> {
+  await ensureUserRoleSchema();
   const sql = 'SELECT * FROM users WHERE id = ? LIMIT 1';
   const rows = await query<User[]>(sql, [id]);
   return rows.length > 0 ? rows[0] : null;
 }
 
 export async function createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<number> {
+  await ensureUserRoleSchema();
   const sql = `
     INSERT INTO users (
       email, password_hash, role, first_name, last_name, phone, avatar_url,
@@ -88,6 +113,7 @@ export async function updateUserProfile(id: number, profile: Partial<Omit<User, 
 }
 
 export async function updateUserRoleAndStatus(id: number, updates: { role?: User['role'], membership_status?: User['membership_status'], membership_type?: User['membership_type'], membership_number?: User['membership_number'] }): Promise<boolean> {
+  await ensureUserRoleSchema();
   const fields: string[] = [];
   const params: any[] = [];
 
@@ -108,17 +134,20 @@ export async function updateUserRoleAndStatus(id: number, updates: { role?: User
 }
 
 export async function getAllUsers(): Promise<Omit<User, 'password_hash'>[]> {
+  await ensureUserRoleSchema();
   const sql = 'SELECT id, email, role, first_name, last_name, phone, membership_number, membership_type, membership_status, created_at FROM users ORDER BY created_at DESC';
   return query<Omit<User, 'password_hash'>[]>(sql);
 }
 
 export async function deleteUser(id: number): Promise<boolean> {
+  await ensureUserRoleSchema();
   const sql = 'DELETE FROM users WHERE id = ?';
   const result = await query(sql, [id]);
   return result.affectedRows > 0;
 }
 
 export async function getNextMembershipNumber(): Promise<string> {
+  await ensureUserRoleSchema();
   // Pattern: SSE/MEM/Year/Index
   const year = new Date().getFullYear();
   const sql = "SELECT COUNT(*) as count FROM users WHERE membership_number LIKE ?";

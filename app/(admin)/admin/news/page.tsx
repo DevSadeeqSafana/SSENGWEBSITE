@@ -3,15 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../admin.module.css';
 import { formatDate } from '@/lib/utils';
+import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
 
 export default function AdminNewsPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ title: '', excerpt: '', content: '', category: '', status: 'DRAFT', featured_image_url: '' });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   useEffect(() => { fetchPosts(); }, []);
 
@@ -34,22 +36,38 @@ export default function AdminNewsPage() {
       const body = editing ? { id: editing.id, ...form } : form;
       const res = await fetch('/api/posts', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
-        setMessage(editing ? 'Post updated!' : 'Post created!');
+        toast.success(editing ? 'Post updated.' : 'Post created.');
         setShowForm(false);
         fetchPosts();
       } else {
         const d = await res.json();
-        setMessage(d.error || 'Save failed.');
+        toast.error(d.error || 'Save failed.');
       }
-    } catch { setMessage('Save failed.'); }
+    } catch { toast.error('Save failed.'); }
     setSaving(false);
-    setTimeout(() => setMessage(''), 4000);
   };
 
   const deletePost = async (id: number, title: string) => {
-    if (!confirm(`Delete post "${title}"?`)) return;
-    await fetch(`/api/posts?id=${id}`, { method: 'DELETE' });
-    fetchPosts();
+    const confirmed = await confirm({
+      title: 'Delete post',
+      message: `Delete post "${title}"?`,
+      confirmText: 'Delete',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/posts?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('Post deleted.');
+        fetchPosts();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Delete failed.');
+      }
+    } catch {
+      toast.error('Delete failed.');
+    }
   };
 
   return (
@@ -62,8 +80,6 @@ export default function AdminNewsPage() {
       </div>
 
       <div className={styles.adminBody}>
-        {message && <div className={`alert ${message.includes('failed') || message.includes('error') ? 'alert-danger' : 'alert-success'}`} style={{ marginBottom: '20px' }}>{message}</div>}
-
         {showForm && (
           <div className={styles.formCard} style={{ marginBottom: '28px' }}>
             <h3 style={{ color: 'var(--primary)', fontWeight: '700', marginBottom: '20px', fontSize: '1.1rem' }}>

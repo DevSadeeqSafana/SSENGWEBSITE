@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   email           VARCHAR(255) NOT NULL UNIQUE,
   password_hash   VARCHAR(255) NOT NULL,
-  role            ENUM('ADMIN','EDITOR','MEMBER') NOT NULL DEFAULT 'MEMBER',
+  role            ENUM('SUPER_ADMIN','ADMIN','EDITOR','MEMBER') NOT NULL DEFAULT 'MEMBER',
   first_name      VARCHAR(100) NOT NULL,
   last_name       VARCHAR(100) NOT NULL,
   phone           VARCHAR(30),
@@ -159,6 +159,24 @@ CREATE TABLE IF NOT EXISTS programs (
 ) ENGINE=InnoDB;
 
 -- ============================================================
+-- PARTNER ORGANIZATIONS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS partners (
+  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name              VARCHAR(200) NOT NULL,
+  logo_url          LONGTEXT,
+  website_url       VARCHAR(500),
+  description       TEXT,
+  status            ENUM('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+  display_order     INT UNSIGNED DEFAULT 0,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status (status),
+  INDEX idx_display_order (display_order)
+) ENGINE=InnoDB;
+
+-- ============================================================
 -- CONTACT FORM SUBMISSIONS
 -- ============================================================
 
@@ -226,7 +244,7 @@ INSERT INTO users (
 ) VALUES (
   'admin@sseng.org',
   '$2b$12$T8JtLCpeWEeJY5QCBm.5zOTrx6kLoYG69c.bKLnM/NT5kJjd9C.Au',
-  'ADMIN',
+  'SUPER_ADMIN',
   'SSE',
   'Admin',
   'SSE/ADMIN/0001',
@@ -239,7 +257,7 @@ INSERT INTO users (
 ON DUPLICATE KEY UPDATE
   email = VALUES(email),
   password_hash = VALUES(password_hash),
-  role = 'ADMIN',
+  role = 'SUPER_ADMIN',
   first_name = VALUES(first_name),
   last_name = VALUES(last_name),
   membership_type = VALUES(membership_type),
@@ -259,6 +277,9 @@ INSERT INTO site_content (section_key, label, content_type, content_value) VALUE
 ('hero_subtext',        'Hero: Supporting Text',        'TEXT',     'The premier professional body committed to promoting excellence in software engineering and strengthening Nigeria\'s digital ecosystem.'),
 ('hero_cta_primary',    'Hero: Primary Button Label',   'TEXT',     'Become a Member'),
 ('hero_cta_secondary',  'Hero: Secondary Button Label', 'TEXT',     'Learn More'),
+('hero_image_1',        'Hero: Slide Image 1 URL',      'IMAGE_URL','/images/hero_slide_1.png'),
+('hero_image_2',        'Hero: Slide Image 2 URL',      'IMAGE_URL','/images/hero_slide_2.png'),
+('hero_image_3',        'Hero: Slide Image 3 URL',      'IMAGE_URL','/images/hero_slide_3.png'),
 
 -- Vision / Mission / Programs Strip
 ('strip_vision_title',  'Strip: Vision Label',          'TEXT',     '01. VISION'),
@@ -290,9 +311,9 @@ INSERT INTO site_content (section_key, label, content_type, content_value) VALUE
 
 -- Footer
 ('footer_tagline',      'Footer: Tagline',              'TEXT',     'Advancing Software Engineering. Empowering Nigeria\'s Digital Future.'),
-('footer_address',      'Footer: Address',              'TEXT',     'Lagos, Nigeria'),
+('footer_address',      'Footer: Address',              'TEXT',     'Abuja Nigeria'),
 ('footer_email',        'Footer: Contact Email',        'TEXT',     'info@sse.ng'),
-('footer_phone',        'Footer: Contact Phone',        'TEXT',     '+234 000 000 0000'),
+('footer_phone',        'Footer: Contact Phone',        'TEXT',     '07003100071'),
 
 -- Social Media
 ('social_facebook',     'Social: Facebook URL',         'TEXT',     '#'),

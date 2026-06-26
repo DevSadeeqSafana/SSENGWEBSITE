@@ -2,6 +2,7 @@ import React from 'react';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
+import { canAccessAdmin } from '@/lib/authz';
 import AdminSidebar from './AdminSidebar';
 import styles from './admin.module.css';
 
@@ -16,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/login');
   }
 
-  if (session.user.role !== 'ADMIN' && session.user.role !== 'EDITOR') {
+  if (!canAccessAdmin(session.user.role)) {
     redirect('/portal');
   }
 

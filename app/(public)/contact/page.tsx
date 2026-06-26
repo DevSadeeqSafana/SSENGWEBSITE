@@ -14,9 +14,9 @@ export default async function ContactPage() {
     console.error('Failed to load contact page details:', error);
   }
 
-  const address = content.footer_address || 'Lagos, Nigeria';
+  const address = content.footer_address || 'Abuja Nigeria';
   const email = content.footer_email || 'info@sse.ng';
-  const phone = content.footer_phone || '+234 000 000 0000';
+  const phone = content.footer_phone || '07003100071';
   
   const facebook = content.social_facebook || '#';
   const twitter = content.social_twitter || '#';

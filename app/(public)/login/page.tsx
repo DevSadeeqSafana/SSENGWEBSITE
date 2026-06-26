@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import LoginForm from '@/components/forms/LoginForm';
 import AnimatedSection from '@/components/ui/AnimatedSection';
 import { authOptions } from '@/lib/auth';
+import { canAccessAdmin } from '@/lib/authz';
 
 const LoadingFallback = () => (
   <div
@@ -24,7 +25,7 @@ const LoadingFallback = () => (
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
 
-  if (session?.user?.role === 'ADMIN' || session?.user?.role === 'EDITOR') {
+  if (canAccessAdmin(session?.user?.role)) {
     redirect('/admin');
   }
 

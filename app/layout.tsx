@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins, Inter, Fira_Code } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/providers/AuthProvider';
+import { FeedbackProvider } from '@/components/ui/FeedbackProvider';
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700', '800'],
@@ -79,9 +80,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable} ${firaCode.variable}`}>
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <FeedbackProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </FeedbackProvider>
       </body>
     </html>
   );

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { canManageContent } from '@/lib/authz';
 import { createContactSubmission, getAllContactSubmissions, updateContactSubmissionStatus } from '@/lib/queries/interactions';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'EDITOR')) {
+    if (!session || !canManageContent(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const submissions = await getAllContactSubmissions();
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'EDITOR')) {
+    if (!session || !canManageContent(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { id, status } = await req.json();

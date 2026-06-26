@@ -163,7 +163,7 @@ export default async function AdminDashboard() {
           <Link href="/admin/events" className="btn btn-secondary btn-sm">+ New Event</Link>
           <Link href="/admin/programs" className="btn btn-outline btn-sm">+ New Program</Link>
           <Link href="/admin/executives" className="btn btn-outline btn-sm">+ Add Executive</Link>
-          <Link href="/admin/content" className="btn btn-outline btn-sm">
+          <Link href="/admin/content/hero" className="btn btn-outline btn-sm">
             <Settings size={16} aria-hidden="true" />
             Edit Site Copy
           </Link>
