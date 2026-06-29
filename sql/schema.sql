@@ -1,7 +1,3 @@
--- ============================================================
--- SSE (Society of Software Engineers) - Database Schema
--- MySQL 8.0+ | Run this once to create all tables
--- ============================================================
 
 CREATE DATABASE IF NOT EXISTS sse_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE sse_db;
